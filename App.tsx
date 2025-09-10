@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, TextInput } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
 // Header Component
@@ -60,16 +60,97 @@ const ContactsScreen = () => (
 );
 
 // Cart Page
-const CartScreen = () => (
-  <ScrollView contentContainerStyle={styles.scrollContent}>
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>Cart</Text>
-      <Text style={styles.cardParagraph}>
-        Your selected courses will appear here. (Add your cart details here.)
-      </Text>
-    </View>
-  </ScrollView>
-);
+const CartScreen = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [checked, setChecked] = useState([false, false, false]);
+  const [total, setTotal] = useState(0);
+
+  // Example prices for each course
+  const prices = [500, 200, 100];
+
+  const handleCheck = (index: number) => {
+    const newChecked = [...checked];
+    newChecked[index] = !newChecked[index];
+    setChecked(newChecked);
+  };
+
+  const calculateTotal = () => {
+    let sum = 0;
+    checked.forEach((isChecked, idx) => {
+      if (isChecked) sum += prices[idx];
+    });
+    setTotal(sum);
+  };
+
+  const handleSubmit = () => {
+    // Add your submit logic here
+    alert('Submitted!');
+  };
+
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Your Cart</Text>
+        <View style={styles.inputRow}>
+          <Text style={styles.inputLabel}>Name:</Text>
+          <TextInput
+            style={styles.inputBox}
+            value={name}
+            onChangeText={setName}
+            placeholder="Enter your name"
+          />
+        </View>
+        <View style={styles.inputRow}>
+          <Text style={styles.inputLabel}>Email:</Text>
+          <TextInput
+            style={styles.inputBox}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Enter your email"
+            keyboardType="email-address"
+          />
+        </View>
+        <View style={styles.inputRow}>
+          <Text style={styles.inputLabel}>Phone:</Text>
+          <TextInput
+            style={styles.inputBox}
+            value={phone}
+            onChangeText={setPhone}
+            placeholder="Enter your phone"
+            keyboardType="phone-pad"
+          />
+        </View>
+        <View style={{ marginVertical: 12 }}>
+          <Text style={[styles.cardParagraph, { textAlign: 'left', marginBottom: 8 }]}>Select Courses:</Text>
+          {['Six Month Course ($500)', 'Six Week Course ($200)', 'One Month Course ($100)'].map((label, idx) => (
+            <TouchableOpacity
+              key={label}
+              style={styles.checkboxRow}
+              onPress={() => handleCheck(idx)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.checkbox, checked[idx] && styles.checkboxChecked]}>
+                {checked[idx] && <View style={styles.checkboxInner} />}
+              </View>
+              <Text style={styles.checkboxLabel}>{label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <TouchableOpacity style={styles.calcButton} onPress={calculateTotal}>
+          <Text style={styles.calcButtonText}>Calculate</Text>
+        </TouchableOpacity>
+        <Text style={[styles.cardParagraph, { fontWeight: 'bold', fontSize: 16, marginVertical: 10 }]}>
+          Total Amount: ${total}
+        </Text>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <Text style={styles.submitButtonText}>Submit</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+};
 
 // Footer Component
 const Footer = ({ onNavigate }: { onNavigate: (page: 'home' | 'courses' | 'contacts' | 'cart') => void }) => (
@@ -324,6 +405,82 @@ const styles = StyleSheet.create({
     color: '#444',
     lineHeight: 17,
     textAlign: 'center',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    gap: 8,
+  },
+  inputLabel: {
+    fontSize: 14,
+    width: 70,
+    color: '#333',
+    fontWeight: '500',
+  },
+  inputBox: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 14,
+    backgroundColor: '#f9f9f9',
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: '#f7ab07ff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+    backgroundColor: '#fff',
+  },
+  checkboxChecked: {
+    backgroundColor: '#f7ab07ff',
+    borderColor: '#f7ab07ff',
+  },
+  checkboxInner: {
+    width: 12,
+    height: 12,
+    backgroundColor: '#fff',
+    borderRadius: 2,
+  },
+  checkboxLabel: {
+    fontSize: 14,
+    color: '#333',
+  },
+  calcButton: {
+    backgroundColor: '#f7ab07ff',
+    borderRadius: 6,
+    paddingVertical: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  calcButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  submitButton: {
+    backgroundColor: '#242424ff',
+    borderRadius: 6,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
 
