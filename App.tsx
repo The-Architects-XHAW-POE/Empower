@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Pressable, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker } from 'react-native-maps';
 
-// Course type and data
+// Course type and static data
+// - Course: Type describing a course object used across the app
 type Course = { id: string; title: string; category: string; price: number; description: string };
 const COURSES: Course[] = [
   { id: 'first-aid', title: 'First Aid', category: 'Six Month', price: 500, description: 'Comprehensive first aid training covering CPR, wound care, and emergency response.' },
@@ -17,19 +18,20 @@ const COURSES: Course[] = [
 ];
 
 // Header Component
+// Displays the app logo and main title shown at the top of every screen
 const Header = () => (
   <View style={styles.header}>
     <View style={styles.headerRow}>
-      {/* Temporary placeholder box for logo */}
       <View style={styles.logoPlaceholder}>
-        <Text style={styles.logoPlaceholderText}>LOGO</Text>
+        <Image source={require('./image/XhawLogo.jpg')} style={styles.logoImage} resizeMode="cover" />
       </View>
       <Text style={styles.title}>Empowering the Nation</Text>
     </View>
   </View>
 );
 
-// Contacts Page
+// Contacts Screen
+// Shows contact details and a MapView with the organization's location
 const ContactsScreen = () => (
   <ScrollView contentContainerStyle={styles.scrollContent}>
     <View style={styles.card}>
@@ -73,7 +75,8 @@ const ContactsScreen = () => (
   </ScrollView>
 );
 
-// Course Details
+// Course Details Screen
+// Shows a single course's description, price and a back button
 const CourseDetails = ({ id, onBack }: { id: string; onBack: () => void }) => {
   const course = COURSES.find(c => c.id === id);
   if (!course) return <View style={styles.card}><Text style={styles.cardParagraph}>Course not found</Text></View>;
@@ -82,7 +85,7 @@ const CourseDetails = ({ id, onBack }: { id: string; onBack: () => void }) => {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>{course.title}</Text>
         <Text style={styles.cardParagraph}>{course.description}</Text>
-        <Text style={[styles.cardParagraph, { fontWeight: 'bold', marginTop: 8 }]}>Price: ${course.price}</Text>
+  <Text style={[styles.cardParagraph, { fontWeight: 'bold', marginTop: 8 }]}>Price: R{course.price}</Text>
         <View style={{ flexDirection: 'row', marginTop: 12 }}>
           {/* Add-to-cart removed from details page per request */}
           <TouchableOpacity style={[styles.headerButton, { flex: 1 }]} onPress={onBack}>
@@ -94,78 +97,241 @@ const CourseDetails = ({ id, onBack }: { id: string; onBack: () => void }) => {
   );
 };
 
-// Cart Page (app-level state will be wired in App)
-const CartScreenApp = ({ items, onRemove, onOpen }: { items: string[]; onRemove: (id: string) => void; onOpen: (id: string) => void }) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+// Cart Screen (Course Selection Form)
+// Form where users enter contact details, select courses, see applicable discounts, VAT and final total
+// Props:
+// - items: list of course ids currently in the cart
+// - onRemove: callback to remove an id from cart
+// - onOpen: callback to open a course detail page
+const CartScreenApp = ({
+  items,
+  onRemove,
+  onOpen,
+}: {
+  items: string[];
+  onRemove: (id: string) => void;
+  onOpen: (id: string) => void;
+}) => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
 
-  // Start selected with unique items from cart
-  const [selected, setSelected] = useState<string[]>(() => Array.from(new Set(items)));
+  const [selectedCourses, setSelectedCourses] = useState<string[]>(() =>
+    Array.from(new Set(items))
+  );
+  const [total, setTotal] = useState<number>(0);
+  const [vat, setVat] = useState<number>(0);
+  const [discount, setDiscount] = useState<number>(0);
 
-  const toggle = (id: string) => setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id]);
+  const handleCourseToggle = (id: string) => {
+    setSelectedCourses((prev) =>
+      prev.includes(id)
+        ? prev.filter((courseId) => courseId !== id)
+        : [...prev, id]
+    );
+  };
 
-  const [subtotal, setSubtotal] = useState<number | null>(null);
-  const [vat, setVat] = useState<number | null>(null);
-  const [total, setTotal] = useState<number | null>(null);
+  const calculateTotal = () => {
+    let subtotal = 0;
+    const count = selectedCourses.length;
 
-  const calculate = () => {
-    const sum = selected.reduce((s, id) => s + (COURSES.find(c => c.id === id)?.price || 0), 0);
-    const v = Math.round(sum * 0.15 * 100) / 100;
-    const tot = Math.round((sum + v) * 100) / 100;
-    setSubtotal(sum);
-    setVat(v);
-    setTotal(tot);
+    selectedCourses.forEach((id) => {
+      const course = COURSES.find((c) => c.id === id);
+      if (course) subtotal += course.price;
+    });
+
+    // Apply discount
+    let discountRate = 0;
+    if (count === 2) discountRate = 0.05;
+    else if (count === 3) discountRate = 0.1;
+    else if (count > 3) discountRate = 0.15;
+
+    const discountedTotal = subtotal * (1 - discountRate);
+
+    // Add VAT (15%)
+    const vatAmount = discountedTotal * 0.15;
+    const finalTotal = discountedTotal + vatAmount;
+
+    setDiscount(discountRate * 100);
+    setVat(vatAmount);
+    setTotal(finalTotal);
   };
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Course Selection</Text>
+        <Text style={styles.cardTitle}>Your Cart</Text>
 
-        <Text style={[styles.cardParagraph, { textAlign: 'left', fontWeight: '600', marginTop: 8 }]}>Name</Text>
-        <TextInput style={styles.inputBox} value={name} onChangeText={setName} placeholder="Name" />
+        {/* Discounts section */}
+        <Text
+          style={{
+            fontWeight: "bold",
+            fontSize: 16,
+            textAlign: "center",
+            marginVertical: 8,
+          }}
+        >
+          Available Discounts
+        </Text>
+        <Text style={[styles.cardParagraph, { textAlign: "center" }]}>
+          1 course: No discount{"\n"}
+          2 courses: 5% discount{"\n"}
+          3 courses: 10% discount{"\n"}
+          More than 3 courses: 15% discount
+        </Text>
 
-        <Text style={[styles.cardParagraph, { textAlign: 'left', fontWeight: '600', marginTop: 8 }]}>Email</Text>
-        <TextInput style={styles.inputBox} value={email} onChangeText={setEmail} placeholder="Email" keyboardType="email-address" />
+        {/* Form section */}
+        <Text
+          style={[
+            styles.cardParagraph,
+            { textAlign: "left", fontWeight: "600", marginTop: 12 },
+          ]}
+        >
+          Name
+        </Text>
+        <TextInput
+          style={styles.inputBox}
+          value={name}
+          onChangeText={setName}
+          placeholder="Enter your name"
+        />
 
-        <Text style={[styles.cardParagraph, { textAlign: 'left', fontWeight: '600', marginTop: 8 }]}>Phone Number</Text>
-        <TextInput style={styles.inputBox} value={phone} onChangeText={setPhone} placeholder="Phone" keyboardType="phone-pad" />
+        <Text
+          style={[
+            styles.cardParagraph,
+            { textAlign: "left", fontWeight: "600", marginTop: 8 },
+          ]}
+        >
+          Email
+        </Text>
+        <TextInput
+          style={styles.inputBox}
+          value={email}
+          onChangeText={setEmail}
+          placeholder="Enter your email"
+          keyboardType="email-address"
+        />
 
-        <Text style={[styles.cardTitle, { fontSize: 16, marginTop: 12 }]}>Select Courses</Text>
-        {COURSES.map(c => (
-          <React.Fragment key={c.id}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 6 }}>
-              <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: selected.includes(c.id) }} onPress={() => toggle(c.id)} style={[styles.checkbox, selected.includes(c.id) && styles.checkboxChecked]}>
-                {selected.includes(c.id) && <View style={styles.checkboxInner} />}
+        <Text
+          style={[
+            styles.cardParagraph,
+            { textAlign: "left", fontWeight: "600", marginTop: 8 },
+          ]}
+        >
+          Phone Number
+        </Text>
+        <TextInput
+          style={styles.inputBox}
+          value={phone}
+          onChangeText={setPhone}
+          placeholder="Enter your phone"
+          keyboardType="phone-pad"
+        />
+
+        {/* Course selection */}
+        <Text
+          style={[
+            styles.cardTitle,
+            { fontSize: 16, textAlign: "left", marginTop: 12 },
+          ]}
+        >
+          Select Courses
+        </Text>
+
+        {COURSES.map((course) => (
+          <React.Fragment key={course.id}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 6 }}>
+              <Pressable
+                accessibilityRole="checkbox"
+                accessibilityState={{
+                  checked: selectedCourses.includes(course.id),
+                }}
+                onPress={() => handleCourseToggle(course.id)}
+                style={[
+                  styles.checkbox,
+                  selectedCourses.includes(course.id) && styles.checkboxChecked,
+                ]}
+              >
+                {selectedCourses.includes(course.id) && (
+                  <View style={styles.checkboxInner} />
+                )}
               </Pressable>
-              <TouchableOpacity onPress={() => onOpen(c.id)} style={{ marginLeft: 10 }}>
-                <Text style={styles.courseText}>{c.title}</Text>
+              <TouchableOpacity
+                onPress={() => onOpen(course.id)}
+                style={{ marginLeft: 10 }}
+              >
+                <Text style={styles.courseText}>
+                  {course.title} - R{course.price}
+                </Text>
               </TouchableOpacity>
             </View>
           </React.Fragment>
         ))}
 
+        {/* Calculate button */}
         <TouchableOpacity
-          style={[styles.calcButton, !(name && email.includes('@') && phone && selected.length > 0) && styles.calcButtonDisabled]}
-          onPress={calculate}
-          disabled={!(name && email.includes('@') && phone && selected.length > 0)}
+          style={[
+            styles.calcButton,
+            !(
+              name &&
+              email.includes("@") &&
+              phone &&
+              selectedCourses.length > 0
+            ) && styles.calcButtonDisabled,
+          ]}
+          onPress={calculateTotal}
+          disabled={
+            !(
+              name &&
+              email.includes("@") &&
+              phone &&
+              selectedCourses.length > 0
+            )
+          }
         >
-          <Text style={styles.calcButtonText}>Calculate</Text>
+          <Text style={styles.calcButtonText}>Calculate Total</Text>
         </TouchableOpacity>
 
+        {/* Total section */}
         <View style={{ marginTop: 12 }}>
-          <Text style={[styles.cardParagraph, { fontWeight: '600', textAlign: 'left' }]}>Subtotal: {subtotal !== null ? `$${subtotal}` : '-'}</Text>
-          <Text style={[styles.cardParagraph, { fontWeight: '600', textAlign: 'left' }]}>VAT (15%): {vat !== null ? `$${vat}` : '-'}</Text>
-          <Text style={[styles.cardParagraph, { fontSize: 16, fontWeight: '700', marginTop: 10, textAlign: 'left' }]}>Total Amount</Text>
-          <Text style={[styles.cardParagraph, { fontSize: 18, fontWeight: '800', marginTop: 6, textAlign: 'left' }]}>{total !== null ? `$${total}` : '-'}</Text>
+          <Text style={[styles.cardParagraph, { textAlign: "left" }]}>
+            Discount Applied: {discount > 0 ? `${discount}%` : "None"}
+          </Text>
+          <Text style={[styles.cardParagraph, { textAlign: "left" }]}>
+            VAT (15%): R{vat.toFixed(2)}
+          </Text>
+          <Text
+            style={[
+              styles.cardParagraph,
+              { fontSize: 16, fontWeight: "700", marginTop: 10, textAlign: "left" },
+            ]}
+          >
+            Total Amount
+          </Text>
+          <Text
+            style={[
+              styles.cardParagraph,
+              { fontSize: 18, fontWeight: "800", marginTop: 6, textAlign: "left" },
+            ]}
+          >
+            R{total > 0 ? total.toFixed(2) : "0.00"}
+          </Text>
         </View>
+
+        {/* Submit */}
+        <TouchableOpacity
+          style={styles.submitButton}
+          onPress={() => alert("Form submitted successfully!")}
+        >
+          <Text style={styles.submitButtonText}>Submit</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
 };
 
-// Footer Component
+// Footer Navigation
+// Bottom navigation bar with quick links to Home, Courses, Contacts and Cart
 const Footer = ({ onNavigate, cartCount }: { onNavigate: (page: 'home' | 'courses' | 'contacts' | 'cart') => void; cartCount?: number }) => (
   <View style={styles.footer}>
     <TouchableOpacity style={styles.headerButton} onPress={() => onNavigate('home')}>
@@ -188,7 +354,8 @@ const Footer = ({ onNavigate, cartCount }: { onNavigate: (page: 'home' | 'course
   </View>
 );
 
-// Main Page
+// Home Screen
+// Landing page with an About card and example images / calls-to-action
 const HomeScreen = () => (
   <ScrollView contentContainerStyle={styles.scrollContent}>
     <View style={styles.card}>
@@ -214,37 +381,83 @@ const HomeScreen = () => (
   </ScrollView>
 );
 
-// Courses Page
-const CoursesScreen = ({ onOpen, onAdd }: { onOpen: (id: string) => void; onAdd: (id: string) => void }) => (
-  <ScrollView contentContainerStyle={styles.scrollContent}>
-    {['Six Month', 'Six Week', 'One Month'].map(category => (
-      <React.Fragment key={category}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>{category} Courses</Text>
-          <Text style={styles.cardParagraph}>
-            {category === 'Six Month' && 'This comprehensive course covers a wide range of skills and knowledge over a six-month period. Ideal for those looking to make a significant career change or enhance their existing skills.'}
-            {category === 'Six Week' && 'A focused six-week course designed to provide essential skills in just six weeks. Perfect for individuals seeking quick upskilling or reskilling opportunities.'}
-            {category === 'One Month' && 'Short-term focused learning on a specific practical skill.'}
-          </Text>
-          <View style={{ marginTop: 8, marginBottom: 8 }}>
-            {COURSES.filter(c => c.category === category).map(course => (
-              <React.Fragment key={course.id}>
-                <View style={{ marginVertical: 6 }}>
-                  <TouchableOpacity onPress={() => onOpen(course.id)} style={styles.courseLinkContainer}>
-                    <Text style={styles.courseText}>• {course.title}</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.headerButton, { alignSelf: 'flex-start', marginTop: 6 }]} onPress={() => onAdd(course.id)}>
-                    <Text style={styles.headerButtonText}>Add to Cart</Text>
-                  </TouchableOpacity>
-                </View>
-              </React.Fragment>
-            ))}
-          </View>
+// Courses Screen
+// Lists the available courses by category. Each course exposes a link to details and an Add-to-Cart button.
+const CoursesScreen = ({ onOpen, onAdd }: { onOpen: (id: string) => void; onAdd: (id: string) => void }) => {
+  // Small helper arrays used to render the course lists per category (name + link id)
+  const sixMonthCourses = [
+    { name: "First Aid", link: "first-aid" },
+    { name: "Sewing", link: "sewing" },
+    { name: "Landscaping", link: "landscaping" },
+    { name: "Life Skills", link: "life-skills" },
+  ];
+
+  const sixWeekCourses = [
+    { name: "Cooking", link: "cooking" },
+    { name: "Child Minding", link: "child-minding" },
+    { name: "Garden Maintenance", link: "garden-maintenance" },
+  ];
+
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Our Courses</Text>
+      </View>
+
+      {/* --- Six Month Courses --- */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Six Month Courses</Text>
+        <Text style={styles.cardParagraph}>
+          This comprehensive course covers a wide range of skills and knowledge
+          over a six-month period. Ideal for those looking to make a significant
+          career change or enhance their existing skills.
+        </Text>
+        <View style={{ marginTop: 10 }}>
+          {sixMonthCourses.map((course) => (
+            <React.Fragment key={course.name}>
+              <View style={{ marginVertical: 6 }}>
+                <TouchableOpacity onPress={() => onOpen(course.link)}>
+                  <Text style={styles.courseText}>• {course.name}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.headerButton, { alignSelf: "flex-start", marginTop: 4 }]}
+                  onPress={() => onAdd(course.link)}
+                >
+                  <Text style={styles.headerButtonText}>Add to Cart</Text>
+                </TouchableOpacity>
+              </View>
+            </React.Fragment>
+          ))}
         </View>
-      </React.Fragment>
-    ))}
-  </ScrollView>
-);
+      </View>
+
+      {/* --- Six Week Courses --- */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Six Week Courses</Text>
+        <Text style={styles.cardParagraph}>
+          A focused course designed to provide essential skills in just six
+          weeks. Perfect for individuals seeking quick upskilling or reskilling
+          opportunities.
+        </Text>
+        <View style={{ marginTop: 10 }}>
+          {sixWeekCourses.map((course) => (
+            <View id={course.name} style={{ marginVertical: 6 }}>
+              <TouchableOpacity onPress={() => onOpen(course.link)}>
+                <Text style={styles.courseText}>• {course.name}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.headerButton, { alignSelf: "flex-start", marginTop: 4 }]}
+                onPress={() => onAdd(course.link)}
+              >
+                <Text style={styles.headerButtonText}>Add to Cart</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </View>
+      </View>
+    </ScrollView>
+  );
+};
 
 // Main App Component
 const App = () => {
@@ -318,14 +531,19 @@ const styles = StyleSheet.create({
     // If gap doesn't work, use marginLeft on title instead
   },
   logoPlaceholder: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#f7ab07ff',
-    borderRadius: 30,
+    width: 80,
+    height: 80,
+    backgroundColor: '#c68600ff',
+    borderRadius: 40,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 0, // Remove margin so it aligns vertically
     marginRight: 12, // Extra space to the right of logo
+  },
+  logoImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   logoPlaceholderText: {
     color: '#fff',
@@ -335,7 +553,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32, // Bigger font size
     fontWeight: 'bold',
-    color: '#f7ab07ff',
+    color: '#c68600ff',
     textAlign: 'left',
     marginBottom: 0,
     flexShrink: 1, // Prevents overflow
@@ -388,7 +606,7 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   imageButton: {
-    backgroundColor: '#f7ab07ff',
+    backgroundColor: '#c68600ff',
     borderRadius: 6,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -478,15 +696,15 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 5,
     borderWidth: 2,
-    borderColor: '#f7ab07ff',
+    borderColor: '#c68600ff',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
     backgroundColor: '#fff',
   },
   checkboxChecked: {
-    backgroundColor: '#f7ab07ff',
-    borderColor: '#f7ab07ff',
+    backgroundColor: '#c68600ff',
+    borderColor: '#c68600ff',
   },
   checkboxInner: {
     width: 12,
@@ -531,7 +749,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   calcButton: {
-    backgroundColor: '#f7ab07ff',
+    backgroundColor: '#c68600ff',
     borderRadius: 6,
     paddingVertical: 8,
     alignItems: 'center',
