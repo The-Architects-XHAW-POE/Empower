@@ -25,7 +25,7 @@ headerRow: {
 title: { 
     fontSize: 32, 
     fontWeight: 'bold', 
-    color: '#c68600ff', 
+    color: '#b59d6a', 
     textAlign: 'left', 
     marginBottom: 0, 
     flexShrink: 1, 
@@ -37,13 +37,13 @@ title: {
     color: '#333', 
     textAlign: 'center', 
   },
-  logoPlaceholder: { width: 80, height: 80, backgroundColor: '#c68600ff', borderRadius: 40, justifyContent: 'center', alignItems: 'center', marginBottom: 0, marginRight: 12, },
+  logoPlaceholder: { width: 80, height: 80, backgroundColor: '#b59d6a', borderRadius: 40, justifyContent: 'center', alignItems: 'center', marginBottom: 0, marginRight: 12, },
   logoImage: { width: 80, height: 80, borderRadius: 40, },
   scrollContent: { paddingHorizontal: 20, paddingVertical: 20, flexGrow: 1, justifyContent: 'flex-start', },
   imagesRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, marginBottom: 10, },
   placeholder: { backgroundColor: '#E8E8E8', flex: 1, height: 110, marginBottom: 6, borderRadius: 10, justifyContent: 'center', alignItems: 'center', elevation: 1, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, marginHorizontal: 2, padding: 6, },
   imageText: { fontSize: 13, marginBottom: 4, fontWeight: '400', },
-  imageButton: { backgroundColor: '#c68600ff', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4, marginTop: 2, },
+  imageButton: { backgroundColor: '#b59d6a', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 4, marginTop: 2, },
   imageButtonText: { color: '#fff', fontSize: 12, fontWeight: 'bold', },
   footer: { 
     flexDirection: 'row', 
@@ -58,14 +58,14 @@ title: {
   cardTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 6, color: '#333', textAlign: 'center', },
   cardParagraph: { fontSize: 12, color: '#444', lineHeight: 17, textAlign: 'center', paddingBottom: 8, },
   inputBox: { flex: 1, borderWidth: 1, borderColor: '#ccc', borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6, fontSize: 14, backgroundColor: '#f9f9f9', },
-  checkbox: { width: 22, height: 22, borderRadius: 5, borderWidth: 2, borderColor: '#c68600ff', justifyContent: 'center', alignItems: 'center', marginRight: 10, backgroundColor: '#fff', },
-  checkboxChecked: { backgroundColor: '#c68600ff', borderColor: '#c68600ff', },
+  checkbox: { width: 22, height: 22, borderRadius: 5, borderWidth: 2, borderColor: '#b59d6a', justifyContent: 'center', alignItems: 'center', marginRight: 10, backgroundColor: '#fff', },
+  checkboxChecked: { backgroundColor: '#b59d6a', borderColor: '#b59d6a', },
   checkboxInner: { width: 12, height: 12, backgroundColor: '#fff', borderRadius: 2, },
   cartBadge: { position: 'absolute', top: -6, right: -6, backgroundColor: '#f00', borderRadius: 10, minWidth: 20, height: 20, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4, },
   cartBadgeText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
   toast: { position: 'absolute', left: 20, right: 20, bottom: 100, backgroundColor: '#000000cc', paddingVertical: 10, paddingHorizontal: 14, borderRadius: 8, alignItems: 'center', },
   toastText: { color: '#fff', fontSize: 14, },
-  calcButton: { backgroundColor: '#c68600ff', borderRadius: 6, paddingVertical: 8, alignItems: 'center', marginTop: 10, },
+  calcButton: { backgroundColor: '#b59d6a', borderRadius: 6, paddingVertical: 8, alignItems: 'center', marginTop: 10, },
   calcButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 16, },
   calcButtonDisabled: { backgroundColor: '#d0d0d0', },
   submitButton: { backgroundColor: '#242424ff', borderRadius: 6, paddingVertical: 10, alignItems: 'center', marginTop: 10, },
@@ -79,7 +79,7 @@ title: {
 
   // If you want buttons inside the category container
   categoryButton: {
-    backgroundColor: '#c68600ff',
+    backgroundColor: '#b59d6a',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -93,7 +93,7 @@ title: {
     fontWeight: 'bold',
   },
   categoryTextActive: {
-    color: '#c68600ff',
+    color: '#b59d6a',
   },
   emptyText: {
   textAlign: 'center',
